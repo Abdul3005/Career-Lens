@@ -18,25 +18,10 @@ app = FastAPI(
 )
 
 # ─── CORS CONFIGURATION ──────────────────────────────────
-# Allow local dev ports as well as deployed Vercel frontend
-default_origins = [
-    "https://career-lens-salary-prediction-pakis.vercel.app",
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:3000"
-]
-
-env_origins = os.getenv("CORS_ORIGINS", "")
-if env_origins:
-    additional_origins = [origin.strip() for origin in env_origins.split(",") if origin.strip()]
-    allowed_origins = list(set(default_origins + additional_origins))
-else:
-    allowed_origins = default_origins
-
+# Allowing all origins to prevent CORS preflight (OPTIONS) errors on deployed frontends
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
