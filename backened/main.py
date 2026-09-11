@@ -11,14 +11,15 @@ if current_dir not in sys.path:
 from routes.predicts import router as predict_router, salary_pipeline, jobtype_pipeline
 from routes.charts import router as charts_router
 
+# Initialize App with redirect_slashes disabled to fix preflight OPTIONS issues
 app = FastAPI(
     title="CareerLens Pakistan API",
     description="AI-Powered Career & Salary Intelligence Platform",
-    version="1.0.0"
+    version="1.0.0",
+    redirect_slashes=False
 )
 
-# ─── CORS CONFIGURATION ──────────────────────────────────
-# Allowing all origins to prevent CORS preflight (OPTIONS) errors on deployed frontends
+# ─── CORS CONFIGURATION (SAB SE PEHLE) ──────────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -27,6 +28,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Manual OPTIONS handler to catch any unhandled preflight requests
+@app.options("/{full_path:path}")
+async def options_handler(full_path: str):
+    return {}
+
 # ─── ROUTES ──────────────────────────────────────────────
 app.include_router(predict_router, prefix="/api")
 app.include_router(charts_router,  prefix="/api")
@@ -34,9 +40,6 @@ app.include_router(charts_router,  prefix="/api")
 # ─── HEALTH CHECK ────────────────────────────────────────
 @app.get("/health")
 def health():
-    """
-    Health check endpoint verifying server status and model artifact availability.
-    """
     salary_loaded = salary_pipeline is not None
     jobtype_loaded = jobtype_pipeline is not None
     healthy = salary_loaded and jobtype_loaded
